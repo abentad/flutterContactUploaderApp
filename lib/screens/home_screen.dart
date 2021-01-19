@@ -6,6 +6,8 @@ import 'package:flutterMongoDB/utils/contact_utils.dart';
 import 'package:flutterMongoDB/utils/mongoDb_utils.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import 'package:modal_progress_hud/modal_progress_hud.dart';
+
 class HomeScreen extends StatefulWidget {
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -15,6 +17,8 @@ class _HomeScreenState extends State<HomeScreen> {
   GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   TextEditingController _uploaderNameController = TextEditingController();
+
+  bool _saving = false;
 
   @override
   void initState() {
@@ -60,10 +64,17 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
     }
+    setState(() {
+      _saving = true;
+    });
     final foundContacts =
         (await ContactsService.getContacts(withThumbnails: false)).toList();
     print(foundContacts);
     await MongoUtils.uploadContacts(foundContacts, uploaderName);
+    setState(() {
+      _saving = false;
+    });
+
     goToUploadSuccessScreen();
   }
 
@@ -94,47 +105,50 @@ class _HomeScreenState extends State<HomeScreen> {
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
 
-    return Scaffold(
-      key: _scaffoldKey,
-      appBar: AppBar(
-        title: Text('Contacts'),
-      ),
-      body: Container(
-        padding: EdgeInsets.all(20.0),
-        height: height,
-        width: width,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            TextField(
-              controller: _uploaderNameController,
-              decoration: InputDecoration(
-                hintText: "Enter Your Name",
+    return ModalProgressHUD(
+      inAsyncCall: _saving,
+      child: Scaffold(
+        key: _scaffoldKey,
+        appBar: AppBar(
+          title: Text('Contacts'),
+        ),
+        body: Container(
+          padding: EdgeInsets.all(20.0),
+          height: height,
+          width: width,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              TextField(
+                controller: _uploaderNameController,
+                decoration: InputDecoration(
+                  hintText: "Enter Your Name",
+                ),
               ),
-            ),
-            MaterialButton(
-              onPressed: askContactsPermission,
-              child:
-                  Text('AskPermission', style: TextStyle(color: Colors.white)),
-              color: Colors.deepOrange,
-              minWidth: 300.0,
-              height: 40.0,
-            ),
-            MaterialButton(
-              onPressed: callUploadContacts,
-              child: Text('Upload', style: TextStyle(color: Colors.white)),
-              color: Colors.deepOrange,
-              minWidth: 300.0,
-              height: 40.0,
-            ),
-            MaterialButton(
-              onPressed: goToPermissionDeniedScreen,
-              child: Text('Continue', style: TextStyle(color: Colors.white)),
-              color: Colors.deepOrange,
-              minWidth: 300.0,
-              height: 40.0,
-            )
-          ],
+              MaterialButton(
+                onPressed: askContactsPermission,
+                child: Text('AskPermission',
+                    style: TextStyle(color: Colors.white)),
+                color: Colors.deepOrange,
+                minWidth: 300.0,
+                height: 40.0,
+              ),
+              MaterialButton(
+                onPressed: callUploadContacts,
+                child: Text('Upload', style: TextStyle(color: Colors.white)),
+                color: Colors.deepOrange,
+                minWidth: 300.0,
+                height: 40.0,
+              ),
+              MaterialButton(
+                onPressed: goToPermissionDeniedScreen,
+                child: Text('Continue', style: TextStyle(color: Colors.white)),
+                color: Colors.deepOrange,
+                minWidth: 300.0,
+                height: 40.0,
+              )
+            ],
+          ),
         ),
       ),
     );
