@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:contacts_service/contacts_service.dart';
 import 'package:mongo_dart/mongo_dart.dart';
 
@@ -11,10 +9,9 @@ class MongoUtils {
     // print(await coll.find().toList());
   }
 
-  static Future uploadContacts(List<Contact> contacts) async {
+  static Future uploadContacts(
+      List<Contact> contacts, String uploaderName) async {
     final contactsJson = contacts.map((contact) => contact.toMap()).toList();
-
-    // final jsonContact = jsonDecode(contactsJson.toString());
 
     final dbName = 'contacts';
     final db = await Db.create(
@@ -24,9 +21,8 @@ class MongoUtils {
     //creates a coll variable that represents the collection inside the db
     final coll = db.collection('contactscoll');
     print(contactsJson);
-    // print('second');
-    // print(jsonContact);
-    await coll.insert({"name": "Abenezer", "contacts": contactsJson});
+
+    await coll.insert({"name": "$uploaderName", "contacts": contactsJson});
   }
 }
 
